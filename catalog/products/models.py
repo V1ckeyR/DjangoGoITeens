@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class Category(models.Model):
@@ -21,7 +22,8 @@ class Product(models.Model):
     name = models.CharField(max_length=255, verbose_name="Назва товару")
     description = models.TextField(blank=True, null=True, verbose_name="Опис товару")
 
-    price = models.IntegerField(verbose_name="Ціна (в грн)")
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Ціна (в грн)",
+                                validators=[MinValueValidator(0.00)])
     discount_price = models.IntegerField(blank=True, null=True, verbose_name="Ціна зі знижкою")
 
     stock = models.PositiveIntegerField(default=0, verbose_name="Кількість на складі")
