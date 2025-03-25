@@ -1,6 +1,54 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<h1>Catalog</h1>
-<p>Soon...</p>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Каталог товарів</h2>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for product in products %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <!-- Зображення -->
+                    <img src="{{ product.image_url|default:'https://assets.turbologo.com/blog/en/2021/09/10094210/product-photo-1.png' }}" class="card-img-top" alt="{{ product.name }}">
+
+                    <div class="card-body">
+                        <!-- Назва товару -->
+                        <h5 class="card-title">{{ product.name }}</h5>
+
+                        <!-- Ціна товару -->
+                        {% if product.discount_price %}
+                            <span class="text-success fs-5">
+                                {{ product.discount_price }} грн
+                            </span>
+                            <span class="text-muted text-decoration-line-through">
+                                {{ product.price }} грн
+                            </span>
+                        {% else %}
+                            <p class="text-success fs-5">{{ product.price }} грн</p>
+                        {% endif %}
+
+                        <!-- Наявність товару -->
+                        {% if product.available %}
+                            <p class="text-success"><i class="bi bi-check-circle-fill"></i> В наявності</p>
+                        {% else %}
+                            <p class="text-danger"><i class="bi bi-x-circle-fill"></i> Немає в наявності</p>
+                        {% endif %}
+
+                        <!-- Рейтинг -->
+                        <p class="mb-2">
+                            Рейтинг:
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= product.rating %}
+                                    <i class="bi bi-star-fill text-warning"></i>  <!-- Заповнена зірка -->
+                                {% else %}
+                                    <i class="bi bi-star text-muted"></i>  <!-- Пуста зірка -->
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

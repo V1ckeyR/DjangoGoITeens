@@ -14,6 +14,7 @@ class Command(BaseCommand):
         category_objs = [Category.objects.get_or_create(name=cat)[0] for cat in categories]
 
         # Створення 50 випадкових товарів
+        Product.objects.all().delete()
         for _ in range(50):
             Product.objects.create(
                 name=fake.word().capitalize(),  # fake.lexify(text="??????-Gadget", letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -26,6 +27,7 @@ class Command(BaseCommand):
                 category=random.choice(category_objs),
                 rating=round(random.uniform(1.0, 5.0), 1),
                 attributes={"color": fake.color_name(), "size": random.choice(["S", "M", "L", "XL"])},
+                image_url = f"https://picsum.photos/id/{random.randint(1, 1000)}/400/400"
             )
 
         self.stdout.write(self.style.SUCCESS('✅ 50 test products added successfully!'))
