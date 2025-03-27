@@ -9,10 +9,30 @@ def index(request):
     sort_by = request.GET.get("sort_by")  # Отримуємо параметр сортування
 
     products = Product.objects.all()
-    
-    print(categories, category_id)
+
+    search_query = request.GET.get("search", "")
+    category_id = request.GET.get("category", "")
+    price_min = request.GET.get("price_min", "")
+    price_max = request.GET.get("price_max", "")
+    rating = request.GET.get("rating", "")
+
+    # Пошук за назвою
+    if search_query:
+        products = products.filter(name__icontains=search_query)
+
+    # Фільтрація за категорією
     if category_id:
         products = products.filter(category_id=category_id)
+
+    # Фільтрація за ціною
+    if price_min:
+        products = products.filter(price__gte=price_min)
+    if price_max:
+        products = products.filter(price__lte=price_max)
+
+    # Фільтрація за рейтингом
+    if rating:
+        products = products.filter(rating__gte=rating)
 
     if sort_by == "price_asc":
         products = products.order_by("price")
