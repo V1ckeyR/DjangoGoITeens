@@ -9,14 +9,34 @@
 </head>
 <body class="d-flex flex-column vh-100">
     <header>
-        <nav class="navbar navbar-dark bg-dark">
+        <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
             <div class="container">
                 <a class="navbar-brand" href="{% url 'home' %}">Main</a>
                 <a class="navbar-brand" href="{% url 'index' %}">Products</a>
+            
+                <ul class="navbar-nav ms-auto">
+                    <!-- Форма сортування -->
+                    <li class="nav-item">
+                        <form method="GET" action="{% url 'index' %}" class="d-flex mx-auto">
+                            <select name="category", class="form-select me-2" onchange="this.form.submit()">
+                                <option value="" {% if not request.GET.category %}selected{% endif %}>Категорія</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s"  %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <select name="sort_by" class="form-select me-2" onchange="this.form.submit()">
+                                <option value="" {% if not request.GET.sort_by %}selected{% endif %}>Сортувати</option>
+                                <option value="price_asc" {% if request.GET.sort_by == "price_asc" %}selected{% endif %}>Ціна: від дешевих до дорогих</option>
+                                <option value="price_desc"  {% if request.GET.sort_by == "price_desc" %}selected{% endif %}>Ціна: від дорогих до дешевих</option>
+                                <option value="rating" {% if request.GET.sort_by == "rating" %}selected{% endif %} >Рейтинг</option>
+                            </select>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </nav>
     </header>
-    <main class="container mt-3 flex-shrink-0">
+    <main class="container my-3 flex-shrink-0">
         {% block content %} {% endblock %}
     </main>
     <footer class="footer mt-auto py-3 px-2 bg-light">
