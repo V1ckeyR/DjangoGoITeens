@@ -21,7 +21,9 @@ from products import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("captcha/", include("captcha.urls")),
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
-    path('products/', include('products.url'))
+    path('products/', include('products.url')),
+    path('accounts/', include('accounts.urls')),
 ]
