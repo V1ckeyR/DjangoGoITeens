@@ -1,0 +1,17 @@
+{% extends "base.html" %}  {# якщо є базовий шаблон #}
+{% block content %}
+<h2>Редагувати профіль</h2>
+
+{% if profile.avatar %}
+    <p>Поточний аватар:</p>
+    <img src="{{ profile.avatar.url }}" alt="Аватар" width="150">
+{% else %}
+    <p>Аватар не встановлено.</p>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Зберегти</button>
+</form>
+{% endblock %}
