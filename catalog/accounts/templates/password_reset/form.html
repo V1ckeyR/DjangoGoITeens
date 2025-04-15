@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Відновлення паролю</h2>
+<p>Введіть адресу електронної пошти, яку ви використовували при реєстрації. Ми надішлемо вам лист з посиланням для скидання пароля.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Надіслати</button>
+</form>
+{% endblock %}
