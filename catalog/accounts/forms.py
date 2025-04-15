@@ -16,6 +16,12 @@ class RegisterForm(UserCreationForm):
         fields = ['username', 'password1', 'password2']
         extra_fields = ['email']
 
+    def save(self, commit = ...):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        if commit:
+            user.save()
+        return user
 
 
 class ProfileUpdateForm(forms.Form):

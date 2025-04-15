@@ -10,12 +10,37 @@ from django.http import HttpResponseBadRequest
 from .models import Profile
 from .forms import RegisterForm,  ProfileUpdateForm
 
+def send_confirm_email(request, user, new_email):
+    #  Генеруємо унікальне посилання для підтвердження
+    confirm_url = request.build_absolute_uri(
+        reverse('confirm_email')  # URL, який ми створимо для підтвердження
+    )
+    # Додамо параметри до URL: id користувача і новий email
+    confirm_url += f"?user={user.id}&email={new_email}"
+    # Формуємо повідомлення листа
+    subject = "Підтвердження електронної пошти"
+    message = f"Привіт, {user.username}!\n\n" \
+            f"Ви запросили змінити адресу електронної пошти на нашому сайті.\n" \
+            f"Новий email: {new_email}\n\n" \
+            f"Щоб підтвердити цю адресу, перейдіть за посиланням:\n{confirm_url}\n\n" \
+            f"Якщо ви не робили цю зміну, просто проігноруйте цей лист."
+    # Відправляємо лист на new_email
+    send_mail(subject, message, 'noreply@myshop.com', [new_email], fail_silently=False)
+    # Можна показати користувачу повідомлення, що лист відправлено
+    messages.info(request, "На нову адресу надіслано лист з підтвердженням. Перевірте пошту.")
+    request.session['pending_email'] = new_email
+
+
 def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            user.is_active = False
+            user.save()
+
             login(request, user)
+            send_confirm_email(request, user=user, new_email=user.email)
             return redirect('home')
     else:
         form = RegisterForm()
@@ -58,24 +83,7 @@ def edit_profile_view(request):
             # Оновлюємо email користувача
             new_email = form.cleaned_data['email']
             if new_email != user.email:
-                # Генеруємо унікальне посилання для підтвердження
-                confirm_url = request.build_absolute_uri(
-                    reverse('confirm_email')  # URL, який ми створимо для підтвердження
-                )
-                # Додамо параметри до URL: id користувача і новий email
-                confirm_url += f"?user={user.id}&email={new_email}"
-                # Формуємо повідомлення листа
-                subject = "Підтвердження електронної пошти"
-                message = f"Привіт, {user.username}!\n\n" \
-                        f"Ви запросили змінити адресу електронної пошти на нашому сайті.\n" \
-                        f"Новий email: {new_email}\n\n" \
-                        f"Щоб підтвердити цю адресу, перейдіть за посиланням:\n{confirm_url}\n\n" \
-                        f"Якщо ви не робили цю зміну, просто проігноруйте цей лист."
-                # Відправляємо лист на new_email
-                send_mail(subject, message, 'noreply@myshop.com', [new_email], fail_silently=False)
-                # Можна показати користувачу повідомлення, що лист відправлено
-                messages.info(request, "На нову адресу надіслано лист з підтвердженням. Перевірте пошту.")
-                request.session['pending_email'] = new_email
+                send_confirm_email(request, user=user, new_email=new_email)
             # решту збереження робимо, тільки НЕ оновлюємо user.email тут, залишимо старий до підтвердження
 
             # Оновлюємо аватар профілю, якщо завантажено новий
@@ -103,12 +111,13 @@ def confirm_email(request):
     except User.DoesNotExist:
         return HttpResponseBadRequest("Користувача не знайдено.")
     # Можна перевірити, що new_email ніким не зайнятий (на випадок, якщо поки підтверджували, хтось зареєстрував)
-    if User.objects.filter(email=new_email).exists():
+    if user.is_active and User.objects.filter(email=new_email).exists():
         return HttpResponseBadRequest("Ця електронна адреса вже використовується іншим обліковим записом.")
     # Оновлюємо email
     old_email = user.email
     user.email = new_email
+    user.is_active = True
     user.save()
     # За бажанням, тут можна помітити в профілі, що email підтверджений, або інший флаг.
     # Повідомлення користувачу
-    return render(request, 'accounts/email_confirmed.html', {'new_email': new_email, 'old_email': old_email})
+    return render(request, 'email_confirmed.html', {'new_email': new_email, 'old_email': old_email})
