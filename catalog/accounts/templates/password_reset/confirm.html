@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Встановлення нового пароля</h2>
+{% if validlink %}
+  <p>Введіть двічі новий пароль. Потім натисніть "Змінити пароль".</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Змінити пароль</button>
+  </form>
+{% else %}
+  <p>Невірне або прострочене посилання для відновлення пароля. Спробуйте відправити запит на відновлення ще раз.</p>
+  <a href="{% url 'password_reset' %}">Спробувати ще раз</a>
+{% endif %}
+{% endblock %}
