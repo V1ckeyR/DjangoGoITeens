@@ -60,6 +60,7 @@
         </nav>
     </header>
     <main class="container my-3 flex-shrink-0">
+        {{ request.messages }}
         {% block content %} {% endblock %}
     </main>
     <footer class="footer mt-auto py-3 px-2 bg-light">
