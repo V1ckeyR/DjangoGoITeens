@@ -134,3 +134,5 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # EMAIL_HOST_PASSWORD = 'yourpassword'    # пароль або спеціальний App Password при двофакторці
 # EMAIL_USE_TLS = True
 # DEFAULT_FROM_EMAIL = 'MyShop <your@gmail.com>'
+
+CART_SESSION_ID = "cart"
