@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.http import HttpResponseBadRequest
+from django.conf import settings
+
+from products.models import Cart, CartItem, Product
 
 from .models import Profile
 from .forms import RegisterForm,  ProfileUpdateForm
@@ -52,7 +55,22 @@ def login_view(request):
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
         if user:
+            session_cart = request.session.get(settings.CART_SESSION_ID)
             login(request, user)
+            if session_cart:
+                # перенести кожен товар із сесії в БД
+                cart, _ = Cart.objects.get_or_create(user=user)
+                for prod_id, quantity in session_cart.items():
+                    product = Product.objects.get(id=prod_id)
+                    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+                    if not created:
+                        cart_item.quantity += quantity
+                    else:
+                        cart_item.quantity = quantity
+                    cart_item.save()
+                # очистити кошик в сесії, оскільки він вже перенесений
+                request.session[settings.CART_SESSION_ID] = {}
+
             next_url = request.GET.get('next')
             return redirect(next_url or 'home')
         else:

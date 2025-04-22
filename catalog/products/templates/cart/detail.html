@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Ваш кошик 🛒</h2>
+
+    {% if cart_items %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Товар</th>
+                        <th>Кількість</th>
+                        <th>Сума</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td class="text-start">{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.item_total }} грн</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-danger" title="Видалити">×</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="table-secondary">
+                        <td class="text-start"><strong>Разом:</strong></td>
+                        <td colspan="4" class="text-end"><strong>{{ total_price }} грн</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-end mt-3">
+            <a href="#" class="btn btn-success">Оформити замовлення</a>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Ваш кошик порожній.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

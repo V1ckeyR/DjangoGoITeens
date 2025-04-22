@@ -26,7 +26,7 @@ urlpatterns = [
     path("captcha/", include("captcha.urls")),
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
-    path('products/', include('products.url')),
+    path('products/', include('products.urls')),
     path('accounts/', include('accounts.urls')),
 ]
 
