@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
+from catalog.utils.email import send_order_confirmation_email
 from products.models import Product, Category, Cart, CartItem, Order, OrderItem
 from .forms import OrderCreateForm
 
@@ -141,7 +142,7 @@ def checkout(request):
                 cart.items.all().delete()
             request.session[settings.CART_SESSION_ID] = {}  # очистити сесію
             # Надсилання email підтвердження (див. наступний розділ)
-            # send_order_confirmation_email(order)
+            send_order_confirmation_email(order)
             messages.success(request, f"Дякуємо за замовлення! Номер вашого замовлення: {order.id}. Деталі надіслано на email.")
             return redirect("index")  # перенаправити на головну чи сторінку подяки
     else:

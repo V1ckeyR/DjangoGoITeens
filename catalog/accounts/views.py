@@ -3,35 +3,14 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.urls import reverse
 from django.http import HttpResponseBadRequest
 from django.conf import settings
 
+from catalog.utils.email import send_confirm_email
 from products.models import Cart, CartItem, Product
 
 from .models import Profile
 from .forms import RegisterForm,  ProfileUpdateForm
-
-def send_confirm_email(request, user, new_email):
-    #  Генеруємо унікальне посилання для підтвердження
-    confirm_url = request.build_absolute_uri(
-        reverse('confirm_email')  # URL, який ми створимо для підтвердження
-    )
-    # Додамо параметри до URL: id користувача і новий email
-    confirm_url += f"?user={user.id}&email={new_email}"
-    # Формуємо повідомлення листа
-    subject = "Підтвердження електронної пошти"
-    message = f"Привіт, {user.username}!\n\n" \
-            f"Ви запросили змінити адресу електронної пошти на нашому сайті.\n" \
-            f"Новий email: {new_email}\n\n" \
-            f"Щоб підтвердити цю адресу, перейдіть за посиланням:\n{confirm_url}\n\n" \
-            f"Якщо ви не робили цю зміну, просто проігноруйте цей лист."
-    # Відправляємо лист на new_email
-    send_mail(subject, message, 'noreply@myshop.com', [new_email], fail_silently=False)
-    # Можна показати користувачу повідомлення, що лист відправлено
-    messages.info(request, "На нову адресу надіслано лист з підтвердженням. Перевірте пошту.")
-    request.session['pending_email'] = new_email
 
 
 def register(request):

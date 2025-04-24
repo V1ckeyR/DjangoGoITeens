@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+
+<p>Вітаємо, <strong>{{ order.contact_name }}</strong>!</p>
+<p>Дякуємо за ваше замовлення №<strong>{{ order.id }}</strong> від {{ order.created_at|date:"d.m.Y H:i" }}.</p>
+<p><em>Ми успішно отримали ваше замовлення і починаємо його обробку.</em></p>
+
+<h3>Склад замовлення:</h3>
+<ul>
+  {% for item in order.items.all %}
+    <li>{{ item.product.name }} – {{ item.quantity }} шт. по {{ item.price }} грн (разом {{ item.quantity|floatformat:0|floatformat }} грн)</li>
+  {% endfor %}
+</ul>
+<p><strong>Сума до сплати: {{ total_price }} грн.</strong></p>
+<p>Адреса доставки: {{ order.address }}</p>
+<p>Статус замовлення: <strong>{{ order.get_status_display }}</strong>.</p>
+<hr>
+<p>З повагою,<br>Інтернет-магазин Django Shop</p>
+{% endblock %}
