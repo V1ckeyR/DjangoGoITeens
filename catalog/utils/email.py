@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
-from catalog.products.models import Order
+from products.models import Order
 
 def send_confirm_email(request, user, new_email):
     #  Генеруємо унікальне посилання для підтвердження

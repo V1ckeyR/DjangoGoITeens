@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseBadRequest
 from django.conf import settings
 
-from catalog.utils.email import send_confirm_email
+from utils.email import send_confirm_email
 from products.models import Cart, CartItem, Product
 
 from .models import Profile
