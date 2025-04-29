@@ -121,3 +121,20 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.quantity}. (order #{self.order.id})"
+
+class Payment(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
+    provider = models.CharField(max_length=20, choices=[
+        ("liqpay", "LiqPay"),
+        ("monopay", "MonoPay"),
+        ("google", "Google Pay"),
+        # можна додати інші, наприклад, ("paypal", "PayPal") чи ("stripe", "Stripe") якщо потрібно
+    ])
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=[
+        ("pending", "Очікує підтвердження"),
+        ("paid", "Оплачено"),
+        ("failed", "Помилка")
+    ], default="pending")
+    transaction_id = models.CharField(max_length=100, blank=True, help_text="ID транзакції від платіжної системи")
+    created_at = models.DateTimeField(auto_now_add=True)

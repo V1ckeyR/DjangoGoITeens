@@ -2,10 +2,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.conf import settings
 from django.contrib import messages
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 
-from products.models import Product, Category, Cart, CartItem, Order, OrderItem
+from utils.email import send_order_confirmation_email
+from products.models import Payment, Product, Category, Cart, CartItem, Order, OrderItem
 from .forms import OrderCreateForm
 
 
@@ -125,7 +124,8 @@ def checkout(request):
                     cart_items.append( 
                         {"product": product, "quantity": quantity}
                     )
-            OrderItem.objects.bulk_create([
+
+            items = OrderItem.objects.bulk_create([
                 OrderItem(
                     order=order,
                     product=item.product,
@@ -134,6 +134,16 @@ def checkout(request):
                 )
                 for item in cart_items
             ])
+    
+            method = form.cleaned_data['payment_method']
+            total_price = sum(item.product.price * item.quantity for item in items)
+
+            if method != "cash":
+                Payment.objects.create(order=order, provider=method, amount=total_price, status="pending")
+            else:
+                # Оплата при отриманні, вважаємо не онлайн
+                order.status = "processing"  # замовлення одразу в роботу, оплату чекатимемо офлайн
+                order.save()
 
             # Очищення кошика після оформлення
             if request.user.is_authenticated:
@@ -141,7 +151,7 @@ def checkout(request):
                 cart.items.all().delete()
             request.session[settings.CART_SESSION_ID] = {}  # очистити сесію
             # Надсилання email підтвердження (див. наступний розділ)
-            # send_order_confirmation_email(order)
+            send_order_confirmation_email(order)
             messages.success(request, f"Дякуємо за замовлення! Номер вашого замовлення: {order.id}. Деталі надіслано на email.")
             return redirect("index")  # перенаправити на головну чи сторінку подяки
     else:
