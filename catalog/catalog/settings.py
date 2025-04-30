@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,7 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-on&ih(31kxmb31zyg=$v1&*j13m^n=+pbj9lsa0h%f#ampn1o$'
+ENV_PATH = BASE_DIR / 'catalog/.env'
+if ENV_PATH.exists():
+    with ENV_PATH.open() as f:
+        for line in f:
+            key, value = line.strip().split('=', 1)
+            os.environ[key.strip()] = value.strip()
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("Django SECRET_KEY not set in evnironmental variables")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,7 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
     'captcha',
+    'rest_framework',
+    'drf_spectacular',
+
     'products',
     'accounts'
 ]
@@ -57,7 +71,7 @@ ROOT_URLCONF = 'catalog.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'catalog/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -136,3 +150,21 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # DEFAULT_FROM_EMAIL = 'MyShop <your@gmail.com>'
 
 CART_SESSION_ID = "cart"
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # схема для Spectacular
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # якщо будемо використовувати токени
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'GoITeens Shop API',
+    'DESCRIPTION': 'API для навчального проекту інтернет-магазину',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

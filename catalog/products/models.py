@@ -25,7 +25,7 @@ class Product(models.Model):
 
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Ціна (в грн)",
                                 validators=[MinValueValidator(0.00)])
-    discount_price = models.IntegerField(blank=True, null=True, verbose_name="Ціна зі знижкою")
+    discount= models.IntegerField(blank=True, null=True, verbose_name="Знижка")
 
     stock = models.PositiveIntegerField(default=0, verbose_name="Кількість на складі")
     available = models.BooleanField(default=True, verbose_name="Доступність товару")
@@ -72,6 +72,7 @@ class CartItem(models.Model):
     
     class Meta:
         db_table = "cart_items"
+        unique_together = ('cart','product')
         
     @property
     def item_total(self):
@@ -90,16 +91,7 @@ class Order(models.Model):
     contact_phone = models.CharField(max_length=20)
     address = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-        
-    # STATUS_CHOICES = [
-    #     1: "new",
-    #     2: "processing",
-    #     3: "shipped",
-    #     4: "completed",
-    #     5: "canceled",
-    # ]
 
-    # status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
     class Status(models.IntegerChoices):
         NEW = 1
         PROCESSING = 2

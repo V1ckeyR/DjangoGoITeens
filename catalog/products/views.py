@@ -142,7 +142,7 @@ def checkout(request):
                 Payment.objects.create(order=order, provider=method, amount=total_price, status="pending")
             else:
                 # Оплата при отриманні, вважаємо не онлайн
-                order.status = "processing"  # замовлення одразу в роботу, оплату чекатимемо офлайн
+                order.status = Order.Status.PROCESSING  # замовлення одразу в роботу, оплату чекатимемо офлайн
                 order.save()
 
             # Очищення кошика після оформлення
