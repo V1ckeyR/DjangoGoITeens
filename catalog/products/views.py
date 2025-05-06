@@ -2,30 +2,34 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.conf import settings
 from django.contrib import messages
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, filters
 
 from utils.email import send_order_confirmation_email
 from products.models import Payment, Product, Category, Cart, CartItem, Order, OrderItem
 from .forms import OrderCreateForm
+from .serializers import ProductSerializer, CategorySerializer
 
+
+class ProductViewSet(viewsets.ModelViewSet):
+    """
+    DRF сам зробить імена:
+    products-list → для GET /api/products/
+    products-detail → для GET /api/products/<pk>/
+    """
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ['category']  # ?category=1
+    ordering_fields = ['price', 'rating']  # ?ordering=price / -price / rating
+
+
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
 
 def index(request):
-    categories = Category.objects.all()
-    category_id = request.GET.get("category")  # Отримуємо вибрану категорію з GET-запиту
-    sort_by = request.GET.get("sort_by")  # Отримуємо параметр сортування
-
-    products = Product.objects.all()
-    
-    if category_id:
-        products = products.filter(category_id=category_id)
-
-    if sort_by == "price_asc":
-        products = products.order_by("price")
-    elif sort_by == "price_desc":
-        products = products.order_by("-price")
-    elif sort_by == "rating":
-        products = products.order_by("-rating")
-
-    return render(request, 'index.html', {"products": products, "categories": categories})
+    return render(request, 'index.html')
 
 def home(request):
     return render(request, 'base.html')

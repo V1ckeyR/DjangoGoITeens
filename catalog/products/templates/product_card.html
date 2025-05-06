@@ -1,0 +1,19 @@
+<!-- Використовується як шаблон у JS (не рендериться сервером напряму) -->
+<template id="product-template">
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <img src="__IMAGE_URL__" class="card-img-top" alt="__NAME__">
+        <div class="card-body">
+          <h5 class="card-title">__NAME__</h5>
+          <div class="price-section">__PRICE__</div>
+          <p class="availability __AVAILABILITY_CLASS__">
+            <i class="bi __AVAILABILITY_ICON__"></i> __AVAILABILITY_TEXT__
+          </p>
+          <p class="rating">__RATING__</p>
+          <a href="/product/__ID__/" class="btn btn-primary">More...</a>
+          <a href="/cart_add/__ID__/" class="btn btn-primary">Add to 🛒</a>
+        </div>
+      </div>
+    </div>
+  </template>
+  

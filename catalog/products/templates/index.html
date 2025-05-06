@@ -4,54 +4,92 @@
 <div class="container mt-5">
     <h2 class="mb-4 text-center">Каталог товарів</h2>
     
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for product in products %}
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <!-- Зображення -->
-                    <img src="{{ product.image_url|default:'https://assets.turbologo.com/blog/en/2021/09/10094210/product-photo-1.png' }}" class="card-img-top" alt="{{ product.name }}">
-
-                    <div class="card-body">
-                        <!-- Назва товару -->
-                        <h5 class="card-title">{{ product.name }}</h5>
-
-                        <!-- Ціна товару -->
-                        {% if product.discount_price %}
-                            <span class="text-success fs-5">
-                                {{ product.discount_price }} грн
-                            </span>
-                            <span class="text-muted text-decoration-line-through">
-                                {{ product.price }} грн
-                            </span>
-                        {% else %}
-                            <p class="text-success fs-5">{{ product.price }} грн</p>
-                        {% endif %}
-
-                        <!-- Наявність товару -->
-                        {% if product.available %}
-                            <p class="text-success"><i class="bi bi-check-circle-fill"></i> В наявності</p>
-                        {% else %}
-                            <p class="text-danger"><i class="bi bi-x-circle-fill"></i> Немає в наявності</p>
-                        {% endif %}
-
-                        <!-- Рейтинг -->
-                        <p class="mb-2">
-                            Рейтинг:
-                            {% for i in "12345" %}
-                                {% if forloop.counter <= product.rating %}
-                                    <i class="bi bi-star-fill text-warning"></i>  <!-- Заповнена зірка -->
-                                {% else %}
-                                    <i class="bi bi-star text-muted"></i>  <!-- Пуста зірка -->
-                                {% endif %}
-                            {% endfor %}
-                        </p>
-
-                        <a href="{% url 'product_detail' product.id %}" class="btn btn-primary">More...</a>
-                        <a href="{% url 'cart_add' product.id %}" class="btn btn-primary">Add to 🛒</a>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
+    <div id="product-list" class="row row-cols-1 row-cols-md-3 g-4">
+        {% include "product_card.html" %}
     </div>
 </div>
+<script>
+    const categorySelect = document.getElementById('categoryFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    const productList = document.getElementById('product-list');
+    const template = document.getElementById('product-template');
+
+    function loadCategories() {
+        fetch('/products/categories/')
+          .then(res => res.json())
+          .then(data => {
+            data.forEach(cat => {
+              const option = document.createElement('option');
+              option.value = cat.id;
+              option.textContent = cat.name;
+              categorySelect.appendChild(option);
+            });
+        });
+    }
+    
+  
+    function loadProducts() {
+        const category = categorySelect.value;
+        const ordering = sortSelect.value;
+        let url = '/products/products/?';
+    
+        if (category) url += `category=${category}&`;
+        if (ordering) url += `ordering=${ordering}`;
+    
+        fetch(url)
+          .then(res => res.json())
+          .then(data => renderProducts(data))
+          .catch(err => {
+            productList.innerHTML = `<p class="text-danger">Не вдалося завантажити товари</p>`;
+            console.error(err);
+        });
+    }
+
+        
+    function renderProducts(products) {
+        productList.innerHTML = '';
+        products.forEach(product => {
+            const card = buildProductCard(product);
+            productList.appendChild(card);
+        });
+    }
+      
+    function buildProductCard(product) {
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.col');
+
+        card.querySelector('img').src = product.image_url || 'https://...';
+        card.querySelector('img').alt = product.name;
+        card.querySelector('.card-title').textContent = product.name;
+        card.querySelector('.price-section').innerHTML = product.discount_price
+            ? `<span class="text-success fs-5">${product.discount_price} грн</span>
+            <span class="text-muted text-decoration-line-through">${product.price} грн</span>`
+            : `<p class="text-success fs-5">${product.price} грн</p>`;
+        card.querySelector('.availability').className = `availability ${product.available ? 'text-success' : 'text-danger'}`;
+        card.querySelector('.availability').innerHTML = `
+            <i class="bi ${product.available ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+            ${product.available ? 'В наявності' : 'Немає в наявності'}
+        `;
+        card.querySelector('.rating').innerHTML = buildRatingStars(product.rating);
+        card.querySelector('a[href^="/product"]').href = `/product/${product.id}/`;
+        card.querySelector('a[href^="/cart_add"]').href = `/cart_add/${product.id}/`;
+
+        return card;
+    }
+
+    function buildRatingStars(rating) {
+        return [1,2,3,4,5].map(i => 
+          `<i class="bi ${i <= rating ? 'bi-star-fill text-warning' : 'bi-star text-muted'}"></i>`
+        ).join('');
+    }
+
+  // Події
+  categorySelect.addEventListener('change', loadProducts);
+  sortSelect.addEventListener('change', loadProducts);
+
+  // Початкове завантаження
+  loadCategories();
+  loadProducts();
+     
+</script>
 {% endblock %}
