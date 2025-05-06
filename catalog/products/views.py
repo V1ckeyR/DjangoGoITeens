@@ -38,8 +38,7 @@ def about(request):
     return render(request, 'base.html')  # TODO
 
 def product_detail(request, product_id):
-    product = get_object_or_404(Product, id=product_id)
-    return render(request, 'product_detail.html', {"product": product})
+    return render(request, 'product_detail.html', {"product_id": product_id})
 
 def cart_add(request, product_id):
     if request.user.is_authenticated:

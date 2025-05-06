@@ -1,101 +1,121 @@
 {% extends "base.html" %}
-
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <!-- Зображення продукту -->
-        <div class="col-md-6">
-            <img src="{{ product.image_url|default:'https://via.placeholder.com/600x400' }}" class="img-fluid rounded shadow" alt="{{ product.name }}">
-        </div>
-
-        <!-- Інформація про продукт -->
-        <div class="col-md-6">
-            <h2 class="mb-3">{{ product.name }}</h2>
-            
-            <!-- Категорія -->
-            <p class="text-muted">Категорія: <a href="{% url 'index' %}?category={{ product.category.id }}">{{ product.category.name }}</a></p>
-            
-            <!-- Артикул (SKU) -->
-            <p class="text-muted">Артикул (SKU): <strong>{{ product.sku }}</strong></p>
-
-            <!-- Ціна -->
-            {% if product.discount_price %}
-                <h4 class="text-danger">
-                    <strong>{{ product.discount_price|floatformat:0 }} грн</strong>
-                </h4>
-                <h5 class="text-muted text-decoration-line-through">
-                    {{ product.price|floatformat:0 }} грн
-                </h5>
-            {% else %}
-                <h4 class="text-success"><strong>{{ product.price|floatformat:0 }} грн</strong></h4>
-            {% endif %}
-
-            <!-- Доступність -->
-            {% if product.available %}
-                <p class="text-success"><i class="bi bi-check-circle-fill"></i> В наявності ({{ product.stock }} шт.)</p>
-            {% else %}
-                <p class="text-danger"><i class="bi bi-x-circle-fill"></i> Немає в наявності</p>
-            {% endif %}
-
-            <!-- Рейтинг -->
-            <p>
-                Рейтинг:
-                {% for i in "12345" %}
-                    {% if forloop.counter <= product.rating|floatformat:0 %}
-                        <i class="bi bi-star-fill text-warning"></i>  <!-- Заповнена зірка -->
-                    {% else %}
-                        <i class="bi bi-star text-muted"></i>  <!-- Пуста зірка -->
-                    {% endif %}
-                {% endfor %}
-            </p>
-
-            <!-- Кнопка додавання в кошик -->
-            <a href="#" class="btn btn-primary mt-3"><i class="bi bi-cart-plus"></i> Додати в кошик</a>
-        </div>
+<div class="container mt-5" id="product-container" data-id="{{ product_id }}">
+  <div class="row g-4">
+    <!-- Зображення -->
+    <div class="col-md-6">
+      <img id="product-image" class="img-fluid rounded shadow" alt="Фото товару" src="https://via.placeholder.com/600x400">
     </div>
 
-    <!-- Додаткові характеристики -->
-    {% if product.attributes %}
-        <div class="row mt-4">
-            <div class="col">
-                <h4>Додаткові характеристики:</h4>
-                <table class="table table-bordered">
-                    <tbody>
-                        {% for key, value in product.attributes.items %}
-                            <tr>
-                                <th>{{ key }}</th>
-                                <td>{{ value }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    {% endif %}
+    <!-- Інформація -->
+    <div class="col-md-6">
+      <h2 id="product-name" class="mb-3"></h2>
+      <p class="text-muted mb-1">Категорія: <span id="product-category"></span></p>
+      <p class="text-muted mb-3">Артикул: <strong id="product-sku"></strong></p>
 
-    <!-- Опис продукту -->
-    {% if product.description %}
-        <div class="row mt-4">
-            <div class="col">
-                <h4>Опис товару</h4>
-                <p>{{ product.description }}</p>
-            </div>
-        </div>
-    {% endif %}
+      <div id="product-price" class="mb-3 fw-bold fs-4"></div>
+      <div id="product-availability" class="mb-3"></div>
 
-    <!-- Дати створення та оновлення -->
-    <div class="row mt-4">
-        <div class="col text-muted">
-            <p>Дата створення: {{ product.created_at|date:"d.m.Y H:i" }}</p>
-            <p>Оновлено: {{ product.updated_at|date:"d.m.Y H:i" }}</p>
-        </div>
+      <div id="product-rating" class="mb-3"></div>
+
+      <a id="add-to-cart" href="#" class="btn btn-primary">
+        <i class="bi bi-cart-plus"></i> Додати в кошик
+      </a>
     </div>
+  </div>
 
-    <!-- Кнопки навігації -->
-    <div class="row mt-4">
-        <div class="col">
-            <a href="{% url 'index' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Назад до каталогу</a>
-        </div>
+  <!-- Характеристики -->
+  <div id="product-attributes-wrapper" class="row mt-5 d-none">
+    <div class="col">
+      <h4>Характеристики</h4>
+      <table class="table table-bordered" id="product-attributes"></table>
     </div>
+  </div>
+
+  <!-- Опис -->
+  <div id="product-description-wrapper" class="row mt-4 d-none">
+    <div class="col">
+      <h4>Опис</h4>
+      <p id="product-description"></p>
+    </div>
+  </div>
+
+  <!-- Дати -->
+  <div class="row mt-4 text-muted">
+    <div class="col">
+      <p>Створено: <span id="product-created"></span></p>
+      <p>Оновлено: <span id="product-updated"></span></p>
+    </div>
+  </div>
+
+  <!-- Назад -->
+  <div class="row mt-4">
+    <div class="col">
+      <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад до каталогу
+      </a>
+    </div>
+  </div>
 </div>
+
+<!-- JavaScript-завантаження товару -->
+<script>
+  const productId = document.getElementById('product-container').dataset.id;
+
+  fetch(`/products/products/${productId}/`)
+    .then(res => res.json())
+    .then(product => {
+      // Основне
+      document.getElementById('product-name').textContent = product.name;
+      document.getElementById('product-sku').textContent = product.sku;
+      document.getElementById('product-image').src = product.image_url || 'https://via.placeholder.com/600x400';
+      document.getElementById('product-image').alt = product.name;
+      document.getElementById('add-to-cart').href = `/cart_add/${product.id}/`;
+
+      // Категорія
+      document.getElementById('product-category').innerHTML =
+        `<a href="/?category=${product.category}">${product.category_name || 'Категорія'}</a>`;
+
+      // Ціна
+      const priceHTML = product.discount_price
+        ? `<span class="text-danger">${product.discount_price} грн</span>
+           <span class="text-muted text-decoration-line-through ms-2">${product.price} грн</span>`
+        : `<span class="text-success">${product.price} грн</span>`;
+      document.getElementById('product-price').innerHTML = priceHTML;
+
+      // Наявність
+      document.getElementById('product-availability').innerHTML = product.available
+        ? `<span class="text-success"><i class="bi bi-check-circle-fill"></i> В наявності (${product.stock})</span>`
+        : `<span class="text-danger"><i class="bi bi-x-circle-fill"></i> Немає в наявності</span>`;
+
+      // Рейтинг
+      document.getElementById('product-rating').innerHTML = 'Рейтинг: ' +
+        Array.from({ length: 5 }, (_, i) => `
+          <i class="bi ${i < product.rating ? 'bi-star-fill text-warning' : 'bi-star text-muted'}"></i>
+        `).join('');
+
+      // Опис
+      if (product.description) {
+        document.getElementById('product-description').textContent = product.description;
+        document.getElementById('product-description-wrapper').classList.remove('d-none');
+      }
+
+      // Атрибути
+      if (product.attributes && Object.keys(product.attributes).length > 0) {
+        const table = document.getElementById('product-attributes');
+        table.innerHTML = Object.entries(product.attributes)
+          .map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+        document.getElementById('product-attributes-wrapper').classList.remove('d-none');
+      }
+
+      // Дати
+      document.getElementById('product-created').textContent = new Date(product.created_at).toLocaleString();
+      document.getElementById('product-updated').textContent = new Date(product.updated_at).toLocaleString();
+    })
+    .catch(error => {
+      document.getElementById('product-container').innerHTML =
+        `<p class="text-danger">Не вдалося завантажити товар.</p>`;
+      console.error(error);
+    });
+</script>
 {% endblock %}

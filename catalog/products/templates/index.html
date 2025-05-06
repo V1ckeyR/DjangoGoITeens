@@ -71,7 +71,7 @@
             ${product.available ? 'В наявності' : 'Немає в наявності'}
         `;
         card.querySelector('.rating').innerHTML = buildRatingStars(product.rating);
-        card.querySelector('a[href^="/product"]').href = `/product/${product.id}/`;
+        card.querySelector('a[href^="/product"]').href = `/products/product/${product.id}/`;
         card.querySelector('a[href^="/cart_add"]').href = `/cart_add/${product.id}/`;
 
         return card;
