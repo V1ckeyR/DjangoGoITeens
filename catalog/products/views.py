@@ -42,8 +42,28 @@ def product_detail(request, product_id):
     return render(request, 'product_detail.html', {"product": product})
 
 class CartViewSet(viewsets.ViewSet):
+    """
+    Це ViewSet без моделі (ViewSet, не ModelViewSet), тому логіка повністю кастомна. Маршрути створюються через @action.
+    """
     @action(detail=False, methods=["post"], url_path="add/(?P<product_id>[^/.]+)")
     def add(self, request, product_id=None):
+        """
+        Перевіряє, чи користувач авторизований
+
+        🔹 Якщо авторизований:
+        Отримує або створює Cart для користувача
+
+        Отримує або створює CartItem з цим товаром
+
+        Якщо такий товар вже є — збільшує кількість, інакше ставить 1
+
+        🔹 Якщо неавторизований:
+        Завантажує словник cart із сесії (request.session)
+
+        Додає/оновлює кількість товару по ID
+
+        Оновлює сесію
+        """
         product = get_object_or_404(Product, id=product_id)
         if request.user.is_authenticated:
             cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -58,6 +78,21 @@ class CartViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"])
     def detail(self, request):
+        """
+        🔹 Якщо авторизований:
+        Повертає cart.items із бази
+
+        Формує список товарів у форматі:
+        { "product_id": 1, "name": "Товар", "price": 100.0, "quantity": 2, "item_total": 200.0 }
+        Рахує total
+
+        🔹 Якщо гість:
+        Завантажує кошик із сесії
+
+        Завантажує Product по ID
+
+        Формує ті ж поля вручну
+        """
         if request.user.is_authenticated:
             cart = getattr(request.user, "cart", None)
             if not cart or cart.items.count() == 0:
@@ -90,6 +125,38 @@ class CartViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["post"])
     def checkout(self, request):
+        """
+        🔹 Перевірка:
+        Якщо кошик порожній → повертає помилку
+
+        🔹 Створення Order:
+        Використовує OrderCreateForm
+
+        Якщо авторизований — прив'язує user
+
+        Зберігає замовлення
+
+        🔹 Додавання товарів до замовлення:
+        Якщо авторизований — бере cart.items з БД
+
+        Якщо гість — бере cart із сесії
+
+        🔹 Створення OrderItem:
+        Через bulk_create, щоб зберегти всі одразу
+
+        🔹 Оплата:
+        Якщо вибрано cash, змінює статус
+
+        Інакше створює Payment зі статусом pending
+
+        🔹 Очищення кошика:
+        Якщо авторизований — очищає cart.items
+
+        Якщо гість — очищає request.session
+
+        🔹 Відправка email:
+        send_order_confirmation_email(order)
+        """
         if request.user.is_authenticated:
             cart = getattr(request.user, "cart", None)
             if not cart or cart.items.count() == 0:

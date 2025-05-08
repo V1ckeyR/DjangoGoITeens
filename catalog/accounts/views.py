@@ -129,6 +129,21 @@ class AccountViewSet(viewsets.ViewSet):  # ViewSet: використовуєть
     
     @action(detail=False, methods=["post"])
     def register(self, request):
+        """
+        Приймає POST-запит з формою реєстрації.
+
+        Якщо form.is_valid():
+
+            Створює нового користувача.
+
+            Робить його неактивним (user.is_active = False), чекає на підтвердження email.
+
+            Авторизує його (login(request, user)).
+
+            Відправляє email на підтвердження (send_confirm_email(...)).
+
+        Якщо форма невалідна — повертає помилки.
+        """
         form = RegisterForm(request.data)
         if form.is_valid():
             user = form.save()
@@ -141,6 +156,21 @@ class AccountViewSet(viewsets.ViewSet):  # ViewSet: використовуєть
 
     @action(detail=False, methods=["post"])
     def login(self, request):
+        """
+        Отримує логін і пароль з тіла запиту.
+
+        authenticate(...) перевіряє облікові дані.
+
+        Якщо успішно:
+
+            Копіює кошик із сесії до бази (для авторизованого користувача).
+
+            Авторизує користувача.
+
+            Повертає повідомлення успіху.
+
+        Якщо неуспішно — повертає помилку.
+        """
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(request, username=username, password=password)
@@ -160,17 +190,38 @@ class AccountViewSet(viewsets.ViewSet):  # ViewSet: використовуєть
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def logout(self, request):
+        """
+        Видаляє сесію користувача через logout(request)
+
+        Повертає відповідь { "message": "Вихід виконано" }
+
+        Доступ тільки для авторизованих користувачів (IsAuthenticated)
+        """
         logout(request)
         return Response({"message": "Вихід виконано"})
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def profile(self, request):
-        profile, _ = Profile.objects.get_or_create(user=request.user)
+        """
+        Отримує або створює об'єкт Profile для користувача.
+
+        Повертає його через ProfileSerializer.
+        """
+        profile = Profile.objects.get(user=request.user)
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
 
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def edit_profile(self, request):
+        """
+        Отримує форму ProfileUpdateForm (включає email та аватар).
+
+        Якщо email змінено — відправляє запит на підтвердження нового email.
+
+        Зберігає аватар у профілі.
+
+        Повертає повідомлення або помилки форми.
+        """
         user = request.user
         profile, _ = Profile.objects.get_or_create(user=user)
         form = ProfileUpdateForm(request.data, request.FILES, user=user)
@@ -187,6 +238,17 @@ class AccountViewSet(viewsets.ViewSet):  # ViewSet: використовуєть
 
     @action(detail=False, methods=["get"])
     def confirm_email(self, request):
+        """
+        Приймає user_id і new_email з GET-запиту.
+
+        Якщо ці параметри відсутні — помилка.
+
+        Перевіряє, що email ще не зайнятий.
+
+        Оновлює email користувача і активує акаунт.
+
+        Повертає повідомлення про успішне підтвердження.
+        """
         user_id = request.GET.get('user')
         new_email = request.GET.get('email')
         if not user_id or not new_email:
