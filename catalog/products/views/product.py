@@ -16,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related('category').all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ProductFilter  # ?category=1
+    filterset_class = ProductFilter  # ?category=1
     ordering_fields = ['price', 'rating']  # ?ordering=price / -price / rating
     search_fields = ['name', 'description']
     

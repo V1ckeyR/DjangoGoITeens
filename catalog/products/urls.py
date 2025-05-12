@@ -21,3 +21,5 @@ urlpatterns = [
     path('cart_detail/', views.cart_detail, name='cart_detail'),
     path('checkout/', views.checkout, name='checkout')
 ]
+
+urlpatterns += router.urls
