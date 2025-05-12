@@ -24,7 +24,11 @@ class ProductSerializer(serializers.ModelSerializer):
             discounted = obj.price * (1 - obj.discount / 100)
             return round(discounted, 2)
         return obj.price
-        
+    
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Ціна не може бути від’ємною")
+        return value
 
 
 class CartItemSerializer(serializers.ModelSerializer):

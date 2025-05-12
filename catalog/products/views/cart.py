@@ -1,15 +1,14 @@
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render, redirect
+from django.shortcuts import get_object_or_404
 from django.conf import settings
-from django.contrib import messages
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from drf_spectacular.utils import extend_schema
 
 from utils.email import send_order_confirmation_email
-from products.models import Payment, Product, Category, Cart, CartItem, Order, OrderItem
+from products.models import Payment, Product, Cart, CartItem, Order, OrderItem
 from ..forms import OrderCreateForm
+from ..serializers import OrderSerializer
 
 class CartViewSet(viewsets.ViewSet):
     """
@@ -94,6 +93,7 @@ class CartViewSet(viewsets.ViewSet):
         return Response({"items": data, "total": total})
 
     @action(detail=False, methods=["post"])
+    @extend_schema(summary="Оформлення замовлення", request=OrderSerializer)
     def checkout(self, request):
         """
         🔹 Перевірка:
